@@ -25,12 +25,16 @@ def download(link: str, resolution: str = None):
     return file
 
 def message_processer(message: str):
-    if ("https://www.youtube.com/watch?" or
-        "https://youtube.com/watch?") in message:
+    if "https://www.youtube.com/watch?" or \
+        "https://youtube.com/watch?" or \
+        "https://youtu.be/" or \
+        "https://m.youtube.com/watch" in message:
         splitted_message = message.split(" ")
         for word in splitted_message:
-            if ("https://www.youtube.com/watch?" or
-            "https://youtube.com/watch?") in word:
+            if "https://www.youtube.com/watch?" or \
+            "https://youtube.com/watch?" or \
+            "https://youtu.be/" or \
+            "https://m.youtube.com/watch" in word:
                 yt_link = word
                 break
         file = download(yt_link)
