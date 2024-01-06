@@ -1,4 +1,5 @@
 import os
+import logging
 
 from dotenv import load_dotenv
 from telegram import Update
@@ -10,11 +11,17 @@ from telegram.ext import (
     ContextTypes
 )
 
-from tools.yt_video_downloader import (
+from tools.processers import (
     message_processer, InvalidRequestException
 )
+from tools.checkers import get_link_type
 
 load_dotenv()
+
+logging.basicConfig(
+    level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 TOKEN: str = os.getenv("TOKEN")
 BOT_USERNAME: str = os.getenv("BOT_USERNAME")
@@ -32,33 +39,43 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 /help
 /test
 
-Or just send a YouTube video link and I'll send that video back to you!""")
+You can also:
+    - Send a YouTube video link and I'll send that video back to you!
+    - Send an Instagram reel link and I'll send that reel back to you!    
+""")
 
 
 async def test_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "This was supposed to test if the bot is working :)"
+        "The bot is working :)"
     )
 
 
 # Handlers
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     text: str = update.message.text
-    print(f"User {update.message.chat.id}: {text}")
-
+    logger.info(f"User {update.message.chat.id}: {text}")
     try:
-        file_path = message_processer(text)
-        if file_path:
-            with open(file_path, 'rb') as file:
-                await update.message.reply_video(
-                    video=file, supports_streaming=True
+        video_link = message_processer(text)
+        if video_link:
+            video_link_type = get_link_type(video_link)
+            if video_link_type == "Path":
+                with open(video_link, 'rb') as file:
+                    await update.message.reply_video(
+                        video=file, supports_streaming=True
+                    )
+                os.remove(video_link)
+            if video_link_type == "URL":
+                await update.message.reply_text(
+                    f"Here's your reel:\n{video_link}"
                 )
-            os.remove(file_path)
     except InvalidRequestException as e:
-        print(e)
+        logger.error(e)
+
 
 if __name__ == "__main__":
     app = Application.builder().token(TOKEN).build()
+    logger.info("The bot is running...")
 
     app.add_handler(CommandHandler("start", start_command))
     app.add_handler(CommandHandler("help", help_command))
@@ -67,6 +84,3 @@ if __name__ == "__main__":
     app.add_handler(MessageHandler(filters.TEXT, handle_message))
 
     app.run_polling(poll_interval=3)
-
-
-# TODO: Replace print statements with logger
