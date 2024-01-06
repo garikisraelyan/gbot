@@ -78,7 +78,6 @@ target/
 
 # pyenv
 .python-version
-.env
 
 # celery beat schedule file
 celerybeat-schedule
@@ -121,3 +120,4 @@ dmypy.json
 
 # VS Code
 .vscode/
+.DS_Store
