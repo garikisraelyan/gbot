@@ -53,6 +53,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await update.message.reply_video(
                     video=file, supports_streaming=True
                 )
+            os.remove(file_path)
     except InvalidRequestException as e:
         print(e)
 
